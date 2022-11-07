@@ -1,12 +1,13 @@
 <template>
-  <div @click="add">添加节点1</div>
+  <div @click="create">添加节点</div>
+  <div @click="remove">删除节点</div>
   <div ref="container" id="container"></div>
 </template>
 
 <script setup name="WorkFlowMap">
 import G6 from "@antv/g6";
 // import data from "./data";
-import { defineComponent, nextTick, onMounted, ref  } from "vue";
+import { defineComponent, nextTick, onMounted, ref, render } from "vue";
 const props = defineProps({
   foo: String
 })
@@ -35,7 +36,7 @@ const fittingString = (str, maxWidth, fontSize) => {
 const globalFontSize = 12;
 
 const container = ref(null);
-
+const currentNode = ref(null);
 const nodesList = {
   nodes: [
     {
@@ -51,75 +52,14 @@ const nodesList = {
         stroke: "#5B8FF9",
         fill: "#0094ff",
       },
-    },
-    {
-      id: "1",
-      label: "1",
-    },
-    {
-      id: "2",
-      label: "2",
-    },
-    {
-      id: "3",
-      label: "3",
-    },
-    {
-      id: "4",
-      label: "4",
-    },
-    {
-      id: "5",
-      label: "5",
-    },
-    {
-      id: "6",
-      label: "6",
-    },
-    {
-      id: "7",
-      label: "7",
-    },
+    }
   ],
   edges: [
-    {
-      source: "0",
-      target: "1",
-    },
-    {
-      source: "0",
-      target: "2",
-    },
-    {
-      source: "1",
-      target: "3",
-    },
-    {
-      source: "2",
-      target: "3",
-    },
-    {
-      source: "3",
-      target: "4",
-    },
-    {
-      source: "4",
-      target: "5",
-    },
-    {
-      source: "4",
-      target: "6",
-    },
-    {
-      source: "5",
-      target: "7",
-    },
-    {
-      source: "6",
-      target: "7",
-    },
+
   ],
 };
+
+
 
 onMounted(() => {
   const graph = new G6.Graph({
@@ -135,7 +75,7 @@ onMounted(() => {
         {
           type: "tooltip",
           formatText(model) {
-            const owners = model.owners;
+            const owners = model.owners ?? [];
             const text = [];
             owners.forEach((row) => {
               text.push(row.role + ":" + row.name + "<br>");
@@ -189,7 +129,119 @@ onMounted(() => {
 
   graph.data(nodesList);
   graph.render();
+  container.value = graph
+  graph.on('node:click', (e) => {
+    const model = e.item.getModel();
+    currentNode.value = model
+    console.log(model)
+  });
+
 });
+
+
+const getId = () => {
+  let arr = nodesList.nodes.map(item => item.id).sort((a,b)=>a-b)
+  return `${parseInt(arr[arr.length - 1]) + 1}`
+}
+
+const isParallel = () => {
+  if (!currentNode.value) { return }
+  const edge = getEdge(currentNode.value.id)
+  return nodesList.edges.filter(it => it.source == edge.source).length == 2
+}
+const getEdge = (id) => {
+  if (!id) { return }
+  return nodesList.edges.find(item => item.target == id)
+}
+
+const renderNode = () => {
+  currentNode.value = null
+  container.value.data(nodesList)
+  container.value.render()
+}
+const remove = () => {
+  if (!currentNode.value) { return }
+  removeNode(currentNode.value.id)
+}
+const removeNode = (id) => {
+  let removeEdges = []
+  let removeSourceEdges = []
+  let removeIndex = []
+  let parallel = isParallel()
+  nodesList.edges.forEach((item, index) => {
+    if (item.target == id) {
+      removeEdges.push(item)
+      removeIndex.push(index)
+      if (parallel) {
+        removeIndex.push(nodesList.edges.findIndex(it => it.source == id))
+      }
+    }
+    if (removeEdges.length > 0 && !parallel) {
+      if (removeSourceEdges.some(it => {
+        return it.target == item.source
+      })) {
+        removeSourceEdges.push(item)
+        removeIndex.push(index)
+      }
+    }
+    if (item.source == id && !parallel) {
+      removeSourceEdges.push(item)
+      removeIndex.push(index)
+    }
+  })
+
+  removeEdges = removeEdges.concat(removeSourceEdges)
+  let removeIds = Array.from(new Set(removeEdges.map(item => item.target)))
+  if(removeIds.length==0){
+    removeIds.push(currentNode.value.id)
+  }
+  nodesList.nodes = nodesList.nodes.filter(item => !removeIds.includes(item.id))
+  removeIndex.forEach(item => {
+    nodesList.edges[item] = null
+  })
+
+  nodesList.edges = nodesList.edges.filter(item => item != null)
+  renderNode()
+}
+
+const create = () => {
+  if(!currentNode.value){return}
+  let node = createNode()
+  nodesList.nodes.push(node)
+  let edge = nodesList.edges.find(item => item.source == currentNode.value.id)
+  let index = nodesList.edges.findIndex(item => item.source == currentNode.value.id)
+  let target = edge?.target
+  nodesList.edges.forEach(item => {
+    if (item.target == target) {
+      item.target = node.id
+    }
+  })
+  let newEdge = {
+    source: node.id,
+    target: target
+  }
+  if(!target){
+    newEdge.source = currentNode.value.id
+    newEdge.target = node.id
+    nodesList.edges.push(newEdge)
+  }else{
+    console.log(index,nodesList.edges.length)
+    nodesList.edges.splice(index,0,newEdge)
+  }
+  renderNode()
+}
+const createNode = () => {
+  let id = getId()
+  return {
+    id: id,
+    label: id,
+    owners: [
+    ],
+    style: {
+    },
+  }
+}
+
 </script>
 
 <style>
