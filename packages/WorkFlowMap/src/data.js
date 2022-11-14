@@ -1,192 +1,135 @@
-const data = {
-    nodes: [
-      {
-        id: '1',
-        dataType: 'alps',
-        label: ' 1. Dr.Kinsidealkjkxjak.. \n 2. Dr.Jia \n ...',
-        conf: [
-          {
-            label: 'conf',
-            value: 'pai_graph.conf',
-          },
-          {
-            label: 'dot',
-            value: 'pai_graph.dot',
-          },
-          {
-            label: 'init',
-            value: 'init.rc',
-          },
-        ],
-      },
-      {
-        id: '2',
-        dataType: 'alps',
-        name: 'alps_file2',
-        conf: [
-          {
-            label: 'conf',
-            value: 'pai_graph.conf',
-          },
-          {
-            label: 'dot',
-            value: 'pai_graph.dot',
-          },
-          {
-            label: 'init',
-            value: 'init.rc',
-          },
-        ],
-      },
-      {
-        id: '3',
-        dataType: 'alps',
-        name: 'alps_file3',
-        conf: [
-          {
-            label: 'conf',
-            value: 'pai_graph.conf',
-          },
-          {
-            label: 'dot',
-            value: 'pai_graph.dot',
-          },
-          {
-            label: 'init',
-            value: 'init.rc',
-          },
-        ],
-      },
-      {
-        id: '4',
-        dataType: 'sql',
-        name: 'sql_file1',
-        conf: [
-          {
-            label: 'conf',
-            value: 'pai_graph.conf',
-          },
-          {
-            label: 'dot',
-            value: 'pai_graph.dot',
-          },
-          {
-            label: 'init',
-            value: 'init.rc',
-          },
-        ],
-      },
-      {
-        id: '5',
-        dataType: 'sql',
-        name: 'sql_file2',
-        conf: [
-          {
-            label: 'conf',
-            value: 'pai_graph.conf',
-          },
-          {
-            label: 'dot',
-            value: 'pai_graph.dot',
-          },
-          {
-            label: 'init',
-            value: 'init.rc',
-          },
-        ],
-      },
-      {
-        id: '6',
-        dataType: 'feature_etl',
-        name: 'feature_etl_1',
-        conf: [
-          {
-            label: 'conf',
-            value: 'pai_graph.conf',
-          },
-          {
-            label: 'dot',
-            value: 'pai_graph.dot',
-          },
-          {
-            label: 'init',
-            value: 'init.rc',
-          },
-        ],
-      },
-      {
-        id: '7',
-        dataType: 'feature_etl',
-        name: 'feature_etl_1',
-        conf: [
-          {
-            label: 'conf',
-            value: 'pai_graph.conf',
-          },
-          {
-            label: 'dot',
-            value: 'pai_graph.dot',
-          },
-          {
-            label: 'init',
-            value: 'init.rc',
-          },
-        ],
-      },
-      {
-        id: '8',
-        dataType: 'feature_extractor',
-        name: 'feature_extractor',
-        conf: [
-          {
-            label: 'conf',
-            value: 'pai_graph.conf',
-          },
-          {
-            label: 'dot',
-            value: 'pai_graph.dot',
-          },
-          {
-            label: 'init',
-            value: 'init.rc',
-          },
-        ],
-      },
-    ],
-    edges: [
-      {
-        source: '1',
-        target: '2',
-      },
-      {
-        source: '1',
-        target: '3',
-      },
-      {
-        source: '2',
-        target: '4',
-      },
-      {
-        source: '3',
-        target: '4',
-      },
-      {
-        source: '4',
-        target: '5',
-      },
-      {
-        source: '5',
-        target: '6',
-      },
-      {
-        source: '6',
-        target: '7',
-      },
-      {
-        source: '6',
-        target: '8',
-      },
-    ],
-  };
+export const database = {
+  "parallelNode": [
+    {
+      "handleNode": {
+        "nodeId": "A",
+        "userIdList": ["z", "x"]
+      }
+    },
+    {
+      "handleNode": {
+        "nodeId": "B",
+        "userIdList": ["y", "t"]
+      }
+    },
+    {
+      "serialNode": [
+        {
+          "handleNode": {
+            "nodeId": "C",
+            "userIdList": ["j", "k"]
+          }
+        },
+        {
+          "handleNode": {
+            "nodeId": "D",
+            "userIdList": ["o", "q"]
+          }
+        },
+        {
+          "parallelNode": [
+            {
+              "serialNode": [
+                {
+                  "handleNode": {
+                    "nodeId": "E",
+                    "userIdList": ["j", "k"]
+                  }
+                },
+                {
+                  "handleNode": {
+                    "nodeId": "F",
+                    "userIdList": ["o", "q"]
+                  }
+                }
+              ]
+            },
+            {
+              "serialNode": [
+                {
+                  "handleNode": {
+                    "nodeId": "G",
+                    "userIdList": ["j", "k"]
+                  }
+                },
+                {
+                  "handleNode": {
+                    "nodeId": "H",
+                    "userIdList": ["o", "q"]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
 
-  export default data
+let data = {
+  nodes: [],
+  edges: []
+}
+export const dfs = (n) => {
+  if (typeof n === 'string') return;
+  let parallelNode = []
+  Object.keys(n).forEach(k => {
+    if (k === 'handleNode') {
+      data.nodes.push({
+        id: n[k].nodeId,
+        label: n[k].userIdList
+      })
+    }
+    if(k=='parallelNode'){
+      console.log(n[k])
+    }
+    // if(k==='serialNode'){
+    //   if(root==0){
+    //      let p = parallelNode.map(item=>{
+    //            return { source:item.target,
+    //             target:n[k]
+    //           }
+    //       })
+
+    //       console.log(parallelNode)
+    //       data.edges.concat(p)
+    //   }
+    //   ++root
+    // }
+    // console.log(root)
+    dfs(n[k])
+
+
+  })
+}
+
+// nodes: [
+//   {
+//     id: "0",
+//     label:
+//       "1. Dr.xalkdfjladdddxdkdf... \n2. Klajdflkadsjflkdjsfkasj... \n ...",
+//     owners: [
+//       { role: "DR", name: "xxxxxxxxxxxxxxxxxxxx" },
+//       { role: "admin", name: "yyyyyyyyyyyyyyyyyyyyyy" },
+//       { role: "xxxx", name: "yyyyyyyyyyyyyyyyyyyyyy" },
+//     ],
+//     style: {
+//       stroke: "#5B8FF9",
+//       fill: "#0094ff",
+//     },
+//   }
+// ],
+// edges: [
+
+// ],
+
+dfs(database)
+
+// console.log(data)
+
+export const getData = () => {
+
+}
+
+export default database

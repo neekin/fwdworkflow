@@ -1,12 +1,13 @@
 <template>
   <div @click="create">添加节点</div>
+  <div @click="createParallelNode">添加并行节点</div>
   <div @click="remove">删除节点</div>
   <div ref="container" id="container"></div>
 </template>
 
 <script setup name="WorkFlowMap">
 import G6 from "@antv/g6";
-// import data from "./data";
+import database, { dfs } from "./data";
 import { defineComponent, nextTick, onMounted, ref, render } from "vue";
 const props = defineProps({
   foo: String
@@ -41,13 +42,7 @@ const nodesList = {
   nodes: [
     {
       id: "0",
-      label:
-        "1. Dr.xalkdfjladdddxdkdf... \n2. Klajdflkadsjflkdjsfkasj... \n ...",
-      owners: [
-        { role: "DR", name: "xxxxxxxxxxxxxxxxxxxx" },
-        { role: "admin", name: "yyyyyyyyyyyyyyyyyyyyyy" },
-        { role: "xxxx", name: "yyyyyyyyyyyyyyyyyyyyyy" },
-      ],
+      label: '0',
       style: {
         stroke: "#5B8FF9",
         fill: "#0094ff",
@@ -131,16 +126,25 @@ onMounted(() => {
   graph.render();
   container.value = graph
   graph.on('node:click', (e) => {
-    const model = e.item.getModel();
-    currentNode.value = model
-    console.log(model)
+
+    // console.log(model)
+    // const shape = e.target;
+    const node = e.item;
+    // console.log(n)
+    if (node._cfg.states.length > 0) {
+      const model = e.item.getModel();
+      currentNode.value = model
+    } else {
+      currentNode.value = null
+    }
+
   });
 
 });
 
 
 const getId = () => {
-  let arr = nodesList.nodes.map(item => item.id).sort((a,b)=>a-b)
+  let arr = nodesList.nodes.map(item => item.id).sort((a, b) => a - b)
   return `${parseInt(arr[arr.length - 1]) + 1}`
 }
 
@@ -192,7 +196,7 @@ const removeNode = (id) => {
 
   removeEdges = removeEdges.concat(removeSourceEdges)
   let removeIds = Array.from(new Set(removeEdges.map(item => item.target)))
-  if(removeIds.length==0){
+  if (removeIds.length == 0) {
     removeIds.push(currentNode.value.id)
   }
   nodesList.nodes = nodesList.nodes.filter(item => !removeIds.includes(item.id))
@@ -205,7 +209,7 @@ const removeNode = (id) => {
 }
 
 const create = () => {
-  if(!currentNode.value){return}
+  if (!currentNode.value) { return }
   let node = createNode()
   nodesList.nodes.push(node)
   let edge = nodesList.edges.find(item => item.source == currentNode.value.id)
@@ -220,13 +224,13 @@ const create = () => {
     source: node.id,
     target: target
   }
-  if(!target){
+  if (!target) {
     newEdge.source = currentNode.value.id
     newEdge.target = node.id
     nodesList.edges.push(newEdge)
-  }else{
-    console.log(index,nodesList.edges.length)
-    nodesList.edges.splice(index,0,newEdge)
+  } else {
+    console.log(index, nodesList.edges.length)
+    nodesList.edges.splice(index, 0, newEdge)
   }
   renderNode()
 }
@@ -240,6 +244,38 @@ const createNode = () => {
     style: {
     },
   }
+}
+
+const createParallelNode = () => {
+  if (!currentNode.value) {
+    let node = createNode()
+    nodesList.nodes.push(node)
+    renderNode()
+    return
+  }
+  let node = createNode()
+  nodesList.nodes.push(node)
+  let edge = nodesList.edges.find(item => item.source == currentNode.value.id)
+  let index = nodesList.edges.findIndex(item => item.source == currentNode.value.id)
+  let target = edge?.target
+  nodesList.edges.forEach(item => {
+    if (item.target == target) {
+      item.target = node.id
+    }
+  })
+  let newEdge = {
+    source: node.id,
+    target: target
+  }
+  if (!target) {
+    newEdge.source = currentNode.value.id
+    newEdge.target = node.id
+    nodesList.edges.push(newEdge)
+  } else {
+    console.log(index, nodesList.edges.length)
+    nodesList.edges.splice(index, 0, newEdge)
+  }
+  renderNode()
 }
 
 </script>
